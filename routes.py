@@ -6,7 +6,6 @@ import json
 
 api_bp = Blueprint('api', __name__)
 
-# instantiate schemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 word_schema = WordSchema()
@@ -18,12 +17,10 @@ guesses_schema = GuessSchema(many=True)
 userword_schema = UserWordSchema()
 userwords_schema = UserWordSchema(many=True)
 
-# Health
 @api_bp.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'}), 200
 
-# Users (create + read)
 @api_bp.route('/users', methods=['POST'])
 def create_user():
     body = request.get_json() or {}
@@ -34,7 +31,6 @@ def create_user():
         return jsonify({'error': 'username and email required'}), 400
     if '@' not in email or '.' not in email.split('@')[-1]:
         return jsonify({'error': 'invalid email format'}), 400
-    # uniqueness checks
     if User.query.filter((User.username == username) | (User.email == email)).first():
         return jsonify({'error': 'username or email already exists'}), 409
 
@@ -53,7 +49,6 @@ def get_user(user_id):
     u = User.query.get_or_404(user_id)
     return user_schema.jsonify(u), 200
 
-# Words (create + read)
 @api_bp.route('/words', methods=['POST'])
 def create_word():
     body = request.get_json() or {}
@@ -86,7 +81,6 @@ def get_word(word_id):
     w = Word.query.get_or_404(word_id)
     return word_schema.jsonify(w), 200
 
-# Bookmarks (many-to-many association with user-submitted note)
 @api_bp.route('/users/<int:user_id>/bookmark/<int:word_id>', methods=['POST'])
 def bookmark_word(user_id, word_id):
     body = request.get_json() or {}
@@ -108,7 +102,6 @@ def user_bookmarks(user_id):
     bookmarks = user.bookmarked_words.all()
     return userwords_schema.jsonify(bookmarks), 200
 
-# Games full CRUD: POST, GET, PATCH, DELETE
 
 @api_bp.route('/games', methods=['POST'])
 def create_game():
@@ -125,15 +118,13 @@ def create_game():
 
     user = User.query.get_or_404(user_id)
 
-    # pick a secret word matching length if available, else fallback to random or 'apple'
     word = Word.query.filter(db.func.length(Word.text) == length).order_by(Word.id).first()
     secret = word.text if word else 'apple'
 
     game = Game(user_id=user.id, secret=secret)
     db.session.add(game)
     db.session.commit()
-    obj = game_schema.dump(game)     # hide secret in responses for in_progress games via schema in GET; here we return full schema but consumer should ignore secret
-
+    obj = game_schema.dump(game)     
     obj.pop('secret', None)
     return jsonify(obj), 201
 
@@ -143,7 +134,6 @@ def list_games():
     out = []
     for g in games:
         obj = game_schema.dump(g)
-        # hide secret in lists if the  game is still in progress
         if g.status == 'in_progress':
             obj.pop('secret', None)
         out.append(obj)
@@ -203,22 +193,19 @@ def create_guess(game_id):
 
     if not guess_text or not guess_text.isalpha():
         return jsonify({'error': 'guess must be alphabetic and not empty'}), 400
-    # length check: enforce length equals secret length
+
     if len(guess_text) != len(g.secret):
         return jsonify({'error': f'guess must be {len(g.secret)} letters long'}), 400
 
-    # Evaluate guess: Wordle-style two-pass evaluation
     secret = g.secret.lower()
     result = [None] * len(guess_text)
     secret_letters = list(secret)
 
-    # first pass: correct positions
     for i, ch in enumerate(guess_text):
         if ch == secret[i]:
             result[i] = {'letter': ch, 'status': 'correct'}
             secret_letters[i] = None
 
-    # second pass: present or absent
     for i, ch in enumerate(guess_text):
         if result[i] is not None:
             continue
@@ -233,7 +220,6 @@ def create_guess(game_id):
     db.session.add(gg)
     db.session.commit()
 
-    # update game status
     if all(p['status'] == 'correct' for p in result):
         g.status = 'won'
         db.session.commit()
@@ -247,7 +233,6 @@ def create_guess(game_id):
 def list_guesses(game_id):
     g = Game.query.get_or_404(game_id)
     guesses = g.guesses.order_by(Guess.created_at.asc()).all()
-    # return deserialized result_json as part of output (not heavy)
     out = []
     for gg in guesses:
         try:
@@ -257,7 +242,6 @@ def list_guesses(game_id):
         out.append({'id': gg.id, 'guess_text': gg.guess_text, 'result': r, 'created_at': gg.created_at})
     return jsonify(out), 200
 
-# Optional: simple seeding route (for testing only)
 @api_bp.route('/seed_words', methods=['POST'])
 def seed_words():
     """

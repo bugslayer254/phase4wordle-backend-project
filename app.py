@@ -11,18 +11,17 @@ ma = Marshmallow()
 def create_app(test_config=None):
     app = Flask(__name__, static_folder=None)
 
-    # default config (sqlite for simplicity)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///wordle_phase4.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # init extensions
+
     db.init_app(app)
     ma.init_app(app)
     Migrate(app, db)
-    CORS(app)  # enable CORS for all routes
+    CORS(app) 
 
-    with app.app_context():        # register models and routes (ensure import after init)
-        import models  # registers models with SQLAlchemy
+    with app.app_context():     
+        import models 
         from routes import api_bp
         app.register_blueprint(api_bp, url_prefix='/api')
 

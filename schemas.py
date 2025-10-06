@@ -14,7 +14,6 @@ class GameSchema(ma.SQLAlchemyAutoSchema):
         model = Game
         include_fk = True
         load_instance = True
-        # By default Marshmallow will include all fields; we will remove 'secret' when needed on read
         fields = ("id", "user_id", "status", "created_at", "max_guesses", "guesses", "secret")
 
 class WordSchema(ma.SQLAlchemyAutoSchema):
