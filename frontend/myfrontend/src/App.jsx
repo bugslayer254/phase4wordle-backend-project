@@ -3,11 +3,13 @@ import Rules from "./components/Rules";
 import Board from "./components/Board";
 import Keyboard from "./components/Keyboard";
 import EndMessage from "./components/EndMessage";
+import Login from "./components/Login";
 import "./App.css";
 
 const MAX_GUESSES = 6;
 
 function App() {
+  const [userId, setUserId] = useState(localStorage.getItem("user_id"));
   const [secretWord, setSecretWord] = useState("");
   const [guesses, setGuesses] = useState([]); // store guesses
   const [currentGuess, setCurrentGuess] = useState("");
@@ -15,6 +17,7 @@ function App() {
   const [win, setWin] = useState(false);
 
   useEffect(() => {
+    if (!userId) return;
     fetch("/api/words")
       .then((res) => res.json())
       .then((data) => {
@@ -26,7 +29,7 @@ function App() {
         }
       })
       .catch((err) => console.error("Error fetching word:", err));
-  }, []);
+  }, [userId]);
 
   const handleKeyPress = (letter) => {
     if (gameOver || !secretWord) return;
@@ -50,10 +53,25 @@ function App() {
     }
   };
 
+  if (!userId) {
+    return <Login onLogin={setUserId} />;
+  }
+
   return (
     <div className="app">
       <h1>Wordle Clone</h1>
       <Rules />
+
+      <button
+        onClick={() => {
+          setUserId(null);
+          localStorage.removeItem("user_id");
+        }}
+        style={{ marginBottom: "10px" }}
+      >
+        Logout
+      </button>
+
       <Board
         guesses={guesses}
         secret={secretWord}
