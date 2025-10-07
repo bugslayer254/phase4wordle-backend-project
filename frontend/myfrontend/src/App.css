@@ -3,20 +3,20 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
-  background-color: #1e90ff;  /* blue background */
+  background-color: #1e90ff; /* blue background */
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;  /* full height of screen */
+  height: 100vh; /* full height of screen */
 }
 
 /* App container */
 .app {
-  background: white;            /* white box in the middle */
+  background: gray; /* white box in the middle */
   padding: 30px;
   border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  width: 400px;                 /* make it bigger */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 400px; /* make it bigger */
   text-align: center;
 }
 
@@ -35,7 +35,7 @@ body {
 
 /* Tiles (letters) */
 .tile {
-  width: 50px;      /* larger tiles */
+  width: 50px; /* larger tiles */
   height: 50px;
   border: 2px solid #ccc;
   margin: 3px;
