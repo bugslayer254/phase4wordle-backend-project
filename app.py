@@ -3,9 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
+from models import db
 import os
 
-db = SQLAlchemy()
+
+
 ma = Marshmallow()
 
 def create_app(test_config=None):
@@ -18,7 +20,7 @@ def create_app(test_config=None):
     db.init_app(app)
     ma.init_app(app)
     Migrate(app, db)
-    CORS(app) 
+    CORS(app,origins=["http://localhost:3000"]) 
 
     with app.app_context():     
         import models 
